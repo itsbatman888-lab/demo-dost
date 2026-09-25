@@ -550,12 +550,12 @@
         const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
         // Initialize Supabase client safely
-        let supabaseClient = null;
+        let supabase = null;
         try {
             if (SUPABASE_URL.includes('YOUR_SUPABASE_PROJECT_ID')) {
                 console.warn("Supabase credentials not set yet. Running in local fallback mode.");
             } else {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             }
         } catch (e) {
             console.error("Supabase Client Init Error:", e);
@@ -647,9 +647,9 @@
                 state.userProfile = JSON.parse(savedLocal);
             }
 
-            if (supabaseClient) {
+            if (supabase) {
                 try {
-                    const { data, error } = await supabaseClient
+                    const { data, error } = await supabase
                         .from('profiles')
                         .select('*')
                         .eq('user_id', state.userId)
@@ -693,9 +693,9 @@
             state.userProfile = { mobile, district, mandal, user_id: state.userId, lang: state.currentLang };
             localStorage.setItem('kisan_dost_profile', JSON.stringify(state.userProfile));
 
-            if (supabaseClient) {
+            if (supabase) {
                 try {
-                    await supabaseClient.from('profiles').upsert([
+                    await supabase.from('profiles').upsert([
                         { user_id: state.userId, mobile, district, mandal, lang: state.currentLang }
                     ]);
                 } catch (err) {
@@ -714,9 +714,9 @@
 
         // Fetch User Bookings from Supabase
         async function fetchBookings() {
-            if (supabaseClient) {
+            if (supabase) {
                 try {
-                    const { data, error } = await supabaseClient
+                    const { data, error } = await supabase
                         .from('bookings')
                         .select('*')
                         .eq('user_id', state.userId)
@@ -772,9 +772,9 @@
                 status: 'En Route'
             };
 
-            if (supabaseClient) {
+            if (supabase) {
                 try {
-                    await supabaseClient.from('bookings').insert([bookingData]);
+                    await supabase.from('bookings').insert([bookingData]);
                 } catch (e) {
                     console.error('Supabase booking insert error:', e);
                 }
