@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#064e3b">
+    <meta name="description" content="Kisan Dost - Emergency Farm Machinery & Service Booking for Farmers">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="https://placehold.co/192x192/15803d/ffffff?text=KisanDost" type="image/png">
+    <title>Kisan Dost - Emergency Farming Equipment & Services</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Telugu:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        kisan: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                            accent: '#eab308'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans Telugu', 'Noto Sans Devanagari', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans Telugu', 'Noto Sans Devanagari', sans-serif;
+            background-color: #0f172a;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .page-transition {
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 0.4; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .pulse-badge {
+            animation: pulse-ring 2s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(4deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .floating-logo {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-800 antialiased min-h-screen flex justify-center items-center p-0 md:p-4">
+
+    <div id="app" class="w-full max-w-md md:max-w-xl h-screen md:h-[94vh] bg-white md:rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border border-slate-700/50">
+        
+        <!-- TOP APP BAR / HEADER -->
+        <header id="appHeader" class="hidden bg-emerald-900 text-white px-4 py-3 flex items-center justify-between shadow-md z-30 relative shrink-0">
+            <div class="flex items-center space-x-3">
+                <button onclick="goBack()" id="backBtn" class="hidden text-white/90 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition">
+                    <i class="fa-solid fa-arrow-left text-lg"></i>
+                </button>
+                <div class="flex items-center space-x-2 cursor-pointer">
+                    <div class="bg-emerald-700/60 p-2 rounded-xl border border-emerald-500/30">
+                        <i class="fa-solid fa-location-dot text-amber-400 text-sm"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1">
+                            <span id="headerMandal" class="font-bold text-sm leading-tight text-emerald-50">Huzurabad</span>
+                        </div>
+                        <span id="headerDistrict" class="text-[11px] text-emerald-200 block">Karimnagar Dist.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Language Switcher & App Actions -->
+            <div class="flex items-center space-x-2">
+                <button id="pwaInstallBtn" onclick="installPWA()" class="hidden bg-amber-400 text-slate-950 text-xs font-black px-2.5 py-1.5 rounded-lg shadow flex items-center gap-1">
+                    <i class="fa-solid fa-download text-xs"></i>
+                    <span>Install</span>
+                </button>
+
+                <div class="relative">
+                    <button onclick="toggleLangDropdown()" class="bg-emerald-950/80 hover:bg-emerald-950 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-emerald-700/50 flex items-center space-x-1.5">
+                        <i class="fa-solid fa-globe text-emerald-300"></i>
+                        <span id="currentLangLabel">EN</span>
+                        <i class="fa-solid fa-caret-down text-[10px] opacity-70"></i>
+                    </button>
+                    <!-- Lang Menu -->
+                    <div id="langDropdown" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-xl border border-slate-100 py-1 text-slate-800 text-xs z-50">
+                        <button onclick="changeLanguage('en')" class="w-full text-left px-3 py-2 hover:bg-emerald-50 flex items-center justify-between font-medium">
+                            English <span class="text-[10px] text-slate-400">EN</span>
+                        </button>
+                        <button onclick="changeLanguage('te')" class="w-full text-left px-3 py-2 hover:bg-emerald-50 flex items-center justify-between font-medium text-emerald-900">
+                            తెలుగు <span class="text-[10px] text-slate-400">TE</span>
+                        </button>
+                        <button onclick="changeLanguage('hi')" class="w-full text-left px-3 py-2 hover:bg-emerald-50 flex items-center justify-between font-medium text-emerald-900">
+                            हिंदी <span class="text-[10px] text-slate-400">HI</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <button onclick="openHistoryModal()" class="relative bg-emerald-800/80 hover:bg-emerald-800 p-2 rounded-xl text-white transition">
+                    <i class="fa-solid fa-receipt text-sm"></i>
+                    <span id="bookingBadge" class="hidden absolute -top-1 -right-1 bg-amber-400 text-slate-950 font-extrabold text-[9px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
+                </button>
+
+                <button onclick="logoutUser()" title="Logout" class="bg-red-800/80 hover:bg-red-700 p-2 rounded-xl text-white transition">
+                    <i class="fa-solid fa-right-from-bracket text-sm"></i>
+                </button>
+            </div>
+        </header>
+
+        <main id="mainContainer" class="flex-1 overflow-y-auto relative bg-slate-50">
+
+            <!-- Offline Banner Alert -->
+            <div id="offlineBanner" class="hidden bg-amber-500 text-slate-950 px-3 py-1.5 text-xs font-bold text-center flex items-center justify-center gap-2 z-40 sticky top-0">
+                <i class="fa-solid fa-wifi"></i>
+                <span>You are currently offline. Local cache enabled.</span>
+            </div>
+
+            <section id="splashScreen" class="absolute inset-0 bg-gradient-to-b from-emerald-900 via-emerald-800 to-emerald-950 flex flex-col items-center justify-center p-6 text-white z-50 transition-opacity duration-700">
+                <div class="floating-logo mb-6 relative">
+                    <div class="w-28 h-28 bg-emerald-600/30 rounded-full flex items-center justify-center border-2 border-emerald-400/40 backdrop-blur-md">
+                        <div class="w-20 h-20 bg-gradient-to-tr from-emerald-500 to-amber-400 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-3">
+                            <i class="fa-solid fa-tractor text-4xl text-slate-900"></i>
+                        </div>
+                    </div>
+                    <div class="absolute -bottom-2 -right-2 bg-amber-400 text-slate-900 p-2 rounded-full shadow-lg">
+                        <i class="fa-solid fa-wheat-awn text-sm"></i>
+                    </div>
+                </div>
+                
+                <h1 class="text-3xl font-extrabold tracking-tight mb-1 text-center font-sans">
+                    <span class="text-emerald-300"> Kisan</span> <span class="text-amber-400">Dost</span>
+                </h1>
+                <p class="text-emerald-200/80 text-xs font-medium tracking-wide uppercase mb-8 text-center" id="splashSubtitle">
+                    Emergency Farm Machinery & Services
+                </p>
+
+                <div class="flex items-center space-x-2 text-emerald-300/80 text-xs font-medium">
+                    <div class="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+                    <span id="splashLoadingText">Connecting to Supabase...</span>
+                </div>
+            </section>
+
+            <section id="loginScreen" class="hidden min-h-full p-6 flex flex-col justify-between bg-gradient-to-b from-emerald-50/50 to-white">
+                <div>
+                    <div class="flex items-center justify-between mb-8">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-md">
+                                <i class="fa-solid fa-tractor text-lg"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-extrabold text-slate-800 text-lg leading-tight">Kisan Dost</h2>
+                                <p class="text-[11px] text-emerald-700 font-semibold" id="loginTagline">Rapid Agricultural Assistance</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+                            <button onclick="changeLanguage('en')" class="lang-btn px-2 py-1 rounded-lg font-bold bg-white text-emerald-800 shadow-sm" data-lang="en">EN</button>
+                            <button onclick="changeLanguage('te')" class="lang-btn px-2 py-1 rounded-lg font-bold text-slate-600 hover:text-emerald-800" data-lang="te">తెలుగు</button>
+                            <button onclick="changeLanguage('hi')" class="lang-btn px-2 py-1 rounded-lg font-bold text-slate-600 hover:text-emerald-800" data-lang="hi">हिंदी</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-emerald-900 text-white p-5 rounded-2xl shadow-lg mb-6 relative overflow-hidden">
+                        <div class="absolute -right-4 -bottom-4 opacity-15 text-7xl text-white">
+                            <i class="fa-solid fa-wheat-awn"></i>
+                        </div>
+                        <span class="bg-amber-400 text-slate-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider mb-2 inline-block" id="demoModeBadge">Fullstack PWA Direct Login</span>
+                        <h3 class="text-lg font-bold mb-1" id="loginHeaderTitle">Book Harvester, Tractor & Repair Techs</h3>
+                        <p class="text-xs text-emerald-100/90 leading-relaxed" id="loginHeaderDesc">Get priority emergency dispatch in your mandal within 30 minutes during critical harvest times.</p>
+                    </div>
+
+                    <form id="loginForm" onsubmit="handleRegistration(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" id="lblMobile">
+                                Mobile Phone Number
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-sm font-semibold">+91</span>
+                                <input type="tel" id="mobileInput" required maxlength="10" placeholder="98765 43210" pattern="[0-9]{10}"
+                                    class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent shadow-sm">
+                            </div>
+                            <span class="text-[10px] text-emerald-600 mt-1 block font-medium" id="otpFreeNote">⚡ Persistent Session: Automatic login active on this device.</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" id="lblDistrict">
+                                    District
+                                </label>
+                                <select id="districtInput" required class="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-medium text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600 shadow-sm">
+                                    <option value="Karimnagar">Karimnagar</option>
+                                    <option value="Warangal">Warangal</option>
+                                    <option value="Nizamabad">Nizamabad</option>
+                                    <option value="Khammam">Khammam</option>
+                                    <option value="Nalgonda">Nalgonda</option>
+                                    <option value="Medak">Medak</option>
+                                    <option value="Guntur">Guntur</option>
+                                    <option value="Kurnool">Kurnool</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" id="lblMandal">
+                                    Mandal
+                                </label>
+                                <input type="text" id="mandalInput" required placeholder="e.g. Huzurabad" value="Huzurabad"
+                                    class="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-medium text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600 shadow-sm">
+                            </div>
+                        </div>
+
+                        <button type="submit" id="btnSubmitForm" class="w-full bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-700/30 transition flex items-center justify-center space-x-2 text-sm mt-2">
+                            <span id="btnRegisterText">Register & Start Booking</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="text-center pt-6 border-t border-slate-100">
+                    <p class="text-[11px] text-slate-500 flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+                        <span id="trustText">Direct connected verified equipment owners across Telangana & AP</span>
+                    </p>
+                </div>
+            </section>
+
+            <section id="dashboardScreen" class="hidden p-4 space-y-4">
+
+                <!-- Emergency Banner -->
+                <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-4 text-slate-900 shadow-lg relative overflow-hidden flex items-center justify-between border border-amber-300/40">
+                    <div class="z-10 max-w-[70%]">
+                        <div class="inline-flex items-center gap-1 bg-slate-900/10 backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide text-slate-900 mb-1">
+                            <span class="w-2 h-2 rounded-full bg-red-600 pulse-badge inline-block"></span>
+                            <span id="emergencyBadgeText">CRITICAL HARVEST DISPATCH</span>
+                        </div>
+                        <h3 class="font-extrabold text-base leading-tight text-slate-950" id="harvesterBannerTitle">Harvester Urgent Request</h3>
+                        <p class="text-[11px] font-medium text-slate-900/90 mt-0.5" id="harvesterBannerDesc">Machines available nearby for immediate field deployment.</p>
+                        <button onclick="selectMachineCategory('Harvester')" class="mt-2.5 bg-slate-950 hover:bg-slate-800 text-amber-400 text-xs font-bold px-3 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-bolt text-amber-400"></i>
+                            <span id="btnExpressBook">Express Booking</span>
+                        </button>
+                    </div>
+                    <div class="text-slate-900/20 text-7xl font-black absolute -right-2 -bottom-3 z-0 pointer-events-none">
+                        <i class="fa-solid fa-wheat-awn-circle-exclamation"></i>
+                    </div>
+                </div>
+
+                <!-- CATEGORY TABS SWITCHER -->
+                <div class="bg-slate-200/80 p-1.5 rounded-2xl flex text-xs font-bold border border-slate-300/50">
+                    <button id="tabMachineries" onclick="switchCategoryTab('machineries')" class="flex-1 py-2.5 rounded-xl bg-emerald-800 text-white shadow-md transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-tractor"></i>
+                        <span id="tabLabelMachineries">Machineries</span>
+                    </button>
+                    <button id="tabServices" onclick="switchCategoryTab('services')" class="flex-1 py-2.5 rounded-xl text-slate-700 hover:text-slate-900 transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-wrench"></i>
+                        <span id="tabLabelServices">Services</span>
+                    </button>
+                </div>
+
+                <!-- SECTION A: MACHINERIES GRID -->
+                <div id="machineriesSection" class="space-y-3">
+                    <div class="flex items-center justify-between px-1">
+                        <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500" id="lblSelectMachinery">Select Agricultural Machinery</h3>
+                        <span class="text-[11px] text-emerald-800 font-bold bg-emerald-100 px-2 py-0.5 rounded-full" id="countMachineries">11 Available</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="machineryGrid"></div>
+                </div>
+
+                <!-- SECTION B: SERVICES CATALOG -->
+                <div id="servicesSection" class="hidden space-y-3">
+                    <div class="flex items-center justify-between px-1">
+                        <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500" id="lblSelectService">Select Agricultural Service</h3>
+                        <span class="text-[11px] text-emerald-800 font-bold bg-emerald-100 px-2 py-0.5 rounded-full" id="countServices">6 Specialized</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="servicesGrid"></div>
+                </div>
+
+            </section>
+
+            <section id="listScreen" class="hidden p-4 space-y-3">
+                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span id="selectedCategoryIcon" class="text-emerald-700 text-lg"></span>
+                            <h2 id="selectedCategoryTitle" class="font-extrabold text-base text-slate-800">Harvester</h2>
+                        </div>
+                        <p id="selectedCategorySubtitle" class="text-xs text-slate-500">Available units in & around your Mandal</p>
+                    </div>
+                    <span class="text-xs font-bold bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <i class="fa-solid fa-clock-rotate-left text-[10px]"></i>
+                        <span id="lblDispatchTime">15-30 Min Arrival</span>
+                    </span>
+                </div>
+
+                <div id="providersList" class="space-y-3"></div>
+            </section>
+
+            <section id="bookingScreen" class="hidden p-4 space-y-4">
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+                    <div class="flex items-start justify-between border-b border-slate-100 pb-3">
+                        <div class="flex space-x-3">
+                            <div id="bookingItemImg" class="w-16 h-16 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-800 text-2xl font-bold shrink-0">
+                                🚜
+                            </div>
+                            <div>
+                                <h3 id="bookingItemTitle" class="font-bold text-slate-900 text-base">John Deere 5050D Harvester</h3>
+                                <p id="bookingOwnerName" class="text-xs text-slate-500">Owner: Ramesh Reddy (Verified)</p>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <span class="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                                        <i class="fa-solid fa-star text-amber-500"></i>
+                                        <span id="bookingItemRating">4.9</span>
+                                    </span>
+                                    <span id="bookingItemDistance" class="text-xs text-emerald-700 font-semibold">1.2 km away</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <a id="btnCallOwner" href="tel:9876543210" class="bg-slate-100 hover:bg-slate-200 text-slate-800 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-slate-300">
+                            <i class="fa-solid fa-phone text-emerald-600"></i>
+                            <span id="lblCallOwner">Call Owner</span>
+                        </a>
+                        <button onclick="simulateWhatsAppChat()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-emerald-200">
+                            <i class="fa-brands fa-whatsapp text-emerald-600 text-sm"></i>
+                            <span id="lblChatOwner">Chat Details</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-4">
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-slate-500" id="lblBookingDetails">Work Requirements</h4>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1" id="lblDuration">Field Size / Hours</label>
+                            <select id="workDuration" onchange="calculateFare()" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800">
+                                <option value="1">1 Hour / 1 Acre</option>
+                                <option value="2" selected>2 Hours / 2 Acres</option>
+                                <option value="3">3 Hours / 3 Acres</option>
+                                <option value="5">5 Hours / Full Half Day</option>
+                                <option value="8">Full Day (8 Hours)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1" id="lblStartTime">Start Priority</label>
+                            <select id="workPriority" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800">
+                                <option value="immediate">⚡ Emergency Immediate</option>
+                                <option value="today">Today Afternoon</option>
+                                <option value="tomorrow">Tomorrow Morning</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" id="lblFarmLocation">Farm Location Landmark</label>
+                        <input type="text" id="farmLandmark" placeholder="e.g. Near Water Tank, Patel Field Road" value="Near Mandal Office, Main Field Road"
+                            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-medium focus:ring-2 focus:ring-emerald-600 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-2" id="lblPaymentMethod">Payment Method</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="payment-option cursor-pointer border-2 border-emerald-600 bg-emerald-50/60 rounded-xl p-3 flex flex-col justify-between space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <i class="fa-solid fa-money-bill-wave text-emerald-700 text-base"></i>
+                                    <input type="radio" name="paymentType" value="COD" checked class="accent-emerald-700">
+                                </div>
+                                <div>
+                                    <span class="block font-bold text-xs text-slate-800" id="lblPayCOD">Cash on Delivery</span>
+                                    <span class="text-[10px] text-slate-500" id="lblPayCODSub">Pay driver directly after work</span>
+                                </div>
+                            </label>
+
+                            <label class="payment-option cursor-pointer border border-slate-200 bg-slate-50 rounded-xl p-3 flex flex-col justify-between space-y-2 hover:border-emerald-400">
+                                <div class="flex items-center justify-between">
+                                    <i class="fa-solid fa-qrcode text-emerald-700 text-base"></i>
+                                    <input type="radio" name="paymentType" value="ONLINE" class="accent-emerald-700">
+                                </div>
+                                <div>
+                                    <span class="block font-bold text-xs text-slate-800" id="lblPayOnline">Online / UPI Demo</span>
+                                    <span class="text-[10px] text-slate-500" id="lblPayOnlineSub">GooglePay, PhonePe, QR</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5 text-xs">
+                        <div class="flex justify-between text-slate-600">
+                            <span id="lblBaseRate">Equipment Rate (<span id="ratePerHour">₹1,200</span> x <span id="hoursCount">2 hrs</span>)</span>
+                            <span id="subtotalPrice" class="font-bold">₹2,400</span>
+                        </div>
+                        <div class="flex justify-between text-slate-600">
+                            <span id="lblOperatorCharge">Driver & Fuel Charge</span>
+                            <span class="text-emerald-700 font-bold" id="lblIncluded">INCLUDED</span>
+                        </div>
+                        <div class="border-t border-slate-200 pt-1.5 flex justify-between font-extrabold text-sm text-slate-900">
+                            <span id="lblTotalAmount">Estimated Total</span>
+                            <span id="totalFarePrice" class="text-emerald-800">₹2,400</span>
+                        </div>
+                    </div>
+
+                    <button onclick="confirmBookingProcess()" id="btnConfirmBookingSubmit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-emerald-700/30 flex items-center justify-center space-x-2 text-sm transition">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span id="btnConfirmBooking">Confirm & Dispatch Machine</span>
+                    </button>
+                </div>
+            </section>
+
+            <section id="trackingScreen" class="hidden p-4 space-y-4">
+                <div class="bg-emerald-800 text-white rounded-2xl p-5 shadow-lg space-y-3 relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <span class="bg-amber-400 text-slate-900 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-800 animate-ping"></span>
+                            <span id="lblActiveStatus">Dispatched & En Route</span>
+                        </span>
+                        <span class="text-xs text-emerald-200" id="lblEstimatedArrival">Arrival in ~18 mins</span>
+                    </div>
+
+                    <h2 class="text-xl font-black" id="lblBookingSuccessTitle">Booking Confirmed!</h2>
+                    <p class="text-xs text-emerald-100" id="lblBookingSuccessDesc">Owner has accepted your emergency request and stored in database.</p>
+
+                    <div class="bg-emerald-900/70 p-3 rounded-xl border border-emerald-700/60 flex items-center justify-between mt-2">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-amber-400 text-slate-900 rounded-full flex items-center justify-center font-bold text-base">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div>
+                                <h4 id="trackOwnerName" class="font-bold text-xs text-white">Ramesh Reddy</h4>
+                                <p id="trackVehicleName" class="text-[11px] text-emerald-200">John Deere 5050D Harvester</p>
+                            </div>
+                        </div>
+                        <a id="trackPhoneBtn" href="tel:9876543210" class="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-xl shadow">
+                            <i class="fa-solid fa-phone"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="font-bold text-xs uppercase tracking-wider text-slate-500" id="lblDispatchProgress">Dispatch Timeline</h3>
+
+                    <div class="space-y-4 relative pl-6 border-l-2 border-emerald-500 ml-2">
+                        <div class="relative">
+                            <span class="absolute -left-[31px] top-0 w-4 h-4 rounded-full bg-emerald-600 border-2 border-white shadow"></span>
+                            <h4 class="text-xs font-bold text-slate-800">Booking Accepted</h4>
+                            <p class="text-[11px] text-slate-500">Owner notified & accepted request in Supabase.</p>
+                        </div>
+                        <div class="relative">
+                            <span class="absolute -left-[31px] top-0 w-4 h-4 rounded-full bg-amber-500 border-2 border-white shadow animate-pulse"></span>
+                            <h4 class="text-xs font-bold text-slate-800">Vehicle En Route</h4>
+                            <p class="text-[11px] text-slate-500">Moving towards your Mandal location.</p>
+                        </div>
+                        <div class="relative">
+                            <span class="absolute -left-[31px] top-0 w-4 h-4 rounded-full bg-slate-300 border-2 border-white shadow"></span>
+                            <h4 class="text-xs font-bold text-slate-400">Farm Arrival & Work Start</h4>
+                            <p class="text-[11px] text-slate-400">Payment upon work completion.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="goHome()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl text-xs transition">
+                    <span id="btnBackHome">Return to Dashboard</span>
+                </button>
+            </section>
+
+        </main>
+
+        <!-- Registration Success Modal -->
+        <div id="modalRegistrationSuccess" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl space-y-4 border border-slate-100">
+                <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-slate-800" id="modalRegTitle">Registration Completed Successfully!</h3>
+                    <p class="text-xs text-slate-500 mt-1" id="modalRegDesc">Welcome to Kisan Dost. Your profile is saved and auto-login is active.</p>
+                </div>
+                <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 text-left text-xs space-y-1">
+                    <div class="flex justify-between"><span class="text-slate-500">Location:</span> <span id="registeredLocationText" class="font-bold text-slate-800">Huzurabad, Karimnagar</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Mobile:</span> <span id="registeredMobileText" class="font-bold text-slate-800">+91 9876543210</span></div>
+                </div>
+                <button onclick="closeRegistrationModal()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 rounded-xl text-xs shadow-md transition">
+                    <span id="btnContinueDashboard">Continue to Dashboard</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Booking History Modal -->
+        <div id="modalHistory" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl space-y-3 max-h-[80vh] flex flex-col">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <h3 class="font-bold text-sm text-slate-800" id="lblBookingHistoryTitle">My Persistent Bookings</h3>
+                    <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <div id="historyListContainer" class="flex-1 overflow-y-auto space-y-2"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // REPLACE THESE WITH YOUR SUPABASE PROJECT CREDENTIALS
+        const SUPABASE_URL = 'https://YOUR_SUPABASE_PROJECT_ID.supabase.co';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+        // Initialize Supabase client safely
+        let supabase = null;
+        try {
+            if (SUPABASE_URL.includes('YOUR_SUPABASE_PROJECT_ID')) {
+                console.warn("Supabase credentials not set yet. Running in local fallback mode.");
+            } else {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch (e) {
+            console.error("Supabase Client Init Error:", e);
+        }
+
+        // Service Worker PWA Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('PWA SW Registered successfully:', reg.scope))
+                    .catch(err => console.log('PWA SW Registration failed:', err));
+            });
+        }
+
+        // PWA Install Prompt Handler
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const btn = document.getElementById('pwaInstallBtn');
+            if (btn) btn.classList.remove('hidden');
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        document.getElementById('pwaInstallBtn').classList.add('hidden');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
+
+        // User Local Session ID helper
+        function getOrCreateUserId() {
+            let uid = localStorage.getItem('kisan_dost_user_id');
+            if (!uid) {
+                uid = 'user_' + Math.random().toString(36).substring(2, 11);
+                localStorage.setItem('kisan_dost_user_id', uid);
+            }
+            return uid;
+        }
+
+        const state = {
+            currentLang: 'en',
+            userId: getOrCreateUserId(),
+            userProfile: { mobile: '', district: 'Karimnagar', mandal: 'Huzurabad' },
+            activeTab: 'machineries',
+            selectedCategory: null,
+            selectedProvider: null,
+            bookingsHistory: []
+        };
+
+        const machineryDataset = [
+            { id: 'm1', name: 'Harvester', nameTe: 'హార్వెస్టర్', nameHi: 'हार्वेस्टर', icon: '🌾', baseRate: 1400, desc: 'Paddy & Grain Combine Harvester' },
+            { id: 'm2', name: 'Tractor', nameTe: 'ట్రాక్టర్', nameHi: 'ट्रैक्टर', icon: '🚜', baseRate: 800, desc: '45-50 HP Tipping Trailer Included' },
+            { id: 'm3', name: 'Rice Transplanter', nameTe: 'వరి నాటు యంత్రం', nameHi: 'धान रोपाई मशीन', icon: '🌱', baseRate: 1100, desc: '4-Row & 6-Row Mechanical Seeder' },
+            { id: 'm4', name: 'Drone Fertilizer', nameTe: 'డ్రోన్ ఎరువుల స్ప్రే', nameHi: 'ड्रोन उर्वरक स्प्रे', icon: '🚁', baseRate: 600, desc: '10L Spray Drone for Pesticide & Liquid Urea' },
+            { id: 'm5', name: 'Rotavator', nameTe: 'రోటావేటర్', nameHi: 'రోటావేటర్', icon: '⚙️', baseRate: 900, desc: 'Heavy Soil Tillage & Seedbed Prep' },
+            { id: 'm6', name: 'Cultivators', nameTe: 'కల్టివేటర్లు', nameHi: 'कल्टीवेटर', icon: '🔱', baseRate: 750, desc: '9-Tyne Spring Loaded Cultivator' },
+            { id: 'm7', name: 'Ploughs', nameTe: 'నాగలి (ప్లవ్)', nameHi: 'हल (प्लाउ)', icon: '⛏️', baseRate: 700, desc: 'Disc Plough & Mouldboard Plough' },
+            { id: 'm8', name: 'Paddy Loader Machine', nameTe: 'వరి లోడర్ యంత్రం', nameHi: 'पैडी लोडर', icon: '🏗️', baseRate: 850, desc: 'Fast Bag Loading & Conveyor System' },
+            { id: 'm9', name: 'Paddy Cleaning Machine', nameTe: 'వరి శుభ్రపరిచే యంత్రం', nameHi: 'धान सफाई मशीन', icon: '🧹', baseRate: 650, desc: 'Grain Cleaner & De-stoner Unit' },
+            { id: 'm10', name: 'Power Tiller', nameTe: 'పవర్ టిల్లర్', nameHi: 'पावर टिलर', icon: '🛵', baseRate: 500, desc: '12HP Small Farm Paddy Tiller' },
+            { id: 'm11', name: 'Bund Trimming Machine', nameTe: 'గట్ల కటింగ్ మిషన్', nameHi: 'मेंढ काटने की मशीन', icon: '✂️', baseRate: 550, desc: 'Field Border & Bund Shaper' }
+        ];
+
+        const servicesDataset = [
+            { id: 's1', name: 'Tractor Services', nameTe: 'ట్రాక్టర్ సర్వీసెస్', nameHi: 'ट्रैक्टर सेवाएं', icon: '🛠️', baseRate: 400, desc: 'Transport, Haulage & Field Clearing' },
+            { id: 's2', name: 'Machinery Service & Repair', nameTe: 'యంత్రాల మరమ్మత్తు', nameHi: 'मशीनरी मरम्मत', icon: '🔧', baseRate: 500, desc: 'On-field Breakdown Repair Specialists' },
+            { id: 's3', name: 'Agricultural Electrician', nameTe: 'వ్యవసాయ ఎలక్ట్రీషియన్', nameHi: 'कृषि इलेक्ट्रीशियन', icon: '⚡', baseRate: 350, desc: 'Starter Box, Transformer & Line Repair' },
+            { id: 's4', name: 'Motor & Pump Mechanic', nameTe: 'మోటార్ మెకానిక్', nameHi: 'मोटर मैकेनिक', icon: '🚰', baseRate: 400, desc: 'Submersible Pump Repair & Winding' },
+            { id: 's5', name: 'Borewell Mechanic', nameTe: 'బోర్‌వెల్ మెకానిక్', nameHi: 'बोरवेल मैकेनिक', icon: '🕳️', baseRate: 600, desc: 'Bore Flushing, Pipe Retrieval & Repair' },
+            { id: 's6', name: 'Equipment Drivers & Operators', nameTe: 'డ్రైవర్లు & ఆపరేటర్లు', nameHi: 'उपकरण ड्राइवर', icon: '👨‍🌾', baseRate: 450, desc: 'Experienced Heavy Vehicle Operators' }
+        ];
+
+        const mockProviders = [
+            { id: 'p1', categoryId: 'm1', title: 'John Deere 5050D Harvester', ownerName: 'Ramesh Reddy', phone: '9848012345', rating: 4.9, reviewsCount: 42, distanceKm: 1.2, hourlyRate: 1400, badge: 'Verified Master' },
+            { id: 'p2', categoryId: 'm1', title: 'Kubota DC-68G Paddy Harvester', ownerName: 'Santhosh Kumar', phone: '9848098765', rating: 4.8, reviewsCount: 29, distanceKm: 2.5, hourlyRate: 1500, badge: 'High Performance' },
+            { id: 'p3', categoryId: 'm2', title: 'Mahindra 575 DI Tractor with Trailer', ownerName: 'Thirupathi Rao', phone: '9949011223', rating: 4.7, reviewsCount: 56, distanceKm: 0.8, hourlyRate: 800, badge: 'Top Rated Driver' }
+        ];
+
+        // Fetch User Profile from Supabase / LocalStorage
+        async function loadProfile() {
+            const savedLocal = localStorage.getItem('kisan_dost_profile');
+            if (savedLocal) {
+                state.userProfile = JSON.parse(savedLocal);
+            }
+
+            if (supabase) {
+                try {
+                    const { data, error } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('user_id', state.userId)
+                        .single();
+
+                    if (data && !error) {
+                        state.userProfile = data;
+                        localStorage.setItem('kisan_dost_profile', JSON.stringify(data));
+                    }
+                } catch (err) {
+                    console.log('Supabase profile fetch fallback:', err);
+                }
+            }
+
+            if (state.userProfile.mobile) {
+                updateHeaderUI();
+                fetchBookings();
+                setTimeout(() => {
+                    hideSplash();
+                    navigateTo('dashboardScreen');
+                }, 1000);
+            } else {
+                setTimeout(() => {
+                    hideSplash();
+                    navigateTo('loginScreen');
+                }, 1000);
+            }
+        }
+
+        // Registration Submitting
+        async function handleRegistration(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitForm');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>Saving Profile...</span>`;
+
+            const mobile = document.getElementById('mobileInput').value || '9876543210';
+            const district = document.getElementById('districtInput').value;
+            const mandal = document.getElementById('mandalInput').value || 'Huzurabad';
+
+            state.userProfile = { mobile, district, mandal, user_id: state.userId, lang: state.currentLang };
+            localStorage.setItem('kisan_dost_profile', JSON.stringify(state.userProfile));
+
+            if (supabase) {
+                try {
+                    await supabase.from('profiles').upsert([
+                        { user_id: state.userId, mobile, district, mandal, lang: state.currentLang }
+                    ]);
+                } catch (err) {
+                    console.error('Supabase profile save error:', err);
+                }
+            }
+
+            updateHeaderUI();
+            document.getElementById('registeredLocationText').innerText = `${mandal}, ${district}`;
+            document.getElementById('registeredMobileText').innerText = `+91 ${mobile}`;
+
+            btn.disabled = false;
+            btn.innerHTML = `<span>Register & Start Booking</span> <i class="fa-solid fa-arrow-right text-xs"></i>`;
+            document.getElementById('modalRegistrationSuccess').classList.remove('hidden');
+        }
+
+        // Fetch User Bookings from Supabase
+        async function fetchBookings() {
+            if (supabase) {
+                try {
+                    const { data, error } = await supabase
+                        .from('bookings')
+                        .select('*')
+                        .eq('user_id', state.userId)
+                        .order('created_at', { ascending: false });
+
+                    if (data && !error) {
+                        state.bookingsHistory = data;
+                        updateBookingBadge();
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Supabase bookings query fallback:', e);
+                }
+            }
+
+            const localBookings = localStorage.getItem('kisan_dost_bookings');
+            if (localBookings) {
+                state.bookingsHistory = JSON.parse(localBookings);
+                updateBookingBadge();
+            }
+        }
+
+        function updateBookingBadge() {
+            const badge = document.getElementById('bookingBadge');
+            if (state.bookingsHistory.length > 0) {
+                badge.innerText = state.bookingsHistory.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // Save Booking
+        async function confirmBookingProcess() {
+            const btn = document.getElementById('btnConfirmBookingSubmit');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>Storing Booking...</span>`;
+
+            const landmark = document.getElementById('farmLandmark').value || 'Main Field Road';
+            const hours = document.getElementById('workDuration').value;
+            const total = document.getElementById('totalFarePrice').innerText;
+            const paymentType = document.querySelector('input[name="paymentType"]:checked').value;
+
+            const bookingData = {
+                user_id: state.userId,
+                provider_name: state.selectedProvider.title,
+                owner_name: state.selectedProvider.ownerName,
+                phone: state.selectedProvider.phone,
+                location: `${landmark}, ${state.userProfile.mandal}`,
+                hours: hours,
+                total: total,
+                payment_type: paymentType,
+                status: 'En Route'
+            };
+
+            if (supabase) {
+                try {
+                    await supabase.from('bookings').insert([bookingData]);
+                } catch (e) {
+                    console.error('Supabase booking insert error:', e);
+                }
+            }
+
+            // Always update local memory store
+            state.bookingsHistory.unshift({ ...bookingData, time: 'Just now' });
+            localStorage.setItem('kisan_dost_bookings', JSON.stringify(state.bookingsHistory));
+            updateBookingBadge();
+
+            document.getElementById('trackOwnerName').innerText = state.selectedProvider.ownerName;
+            document.getElementById('trackVehicleName').innerText = state.selectedProvider.title;
+            document.getElementById('trackPhoneBtn').setAttribute('href', `tel:${state.selectedProvider.phone}`);
+
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>Confirm & Dispatch Machine</span>`;
+
+            navigateTo('trackingScreen');
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('headerMandal').innerText = state.userProfile.mandal;
+            document.getElementById('headerDistrict').innerText = state.userProfile.district + ' Dist.';
+        }
+
+        function hideSplash() {
+            const splash = document.getElementById('splashScreen');
+            splash.classList.add('opacity-0');
+            setTimeout(() => splash.classList.add('hidden'), 500);
+        }
+
+        function navigateTo(screenId) {
+            ['loginScreen', 'dashboardScreen', 'listScreen', 'bookingScreen', 'trackingScreen'].forEach(s => {
+                const el = document.getElementById(s);
+                if (s === screenId) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+
+            const backBtn = document.getElementById('backBtn');
+            if (screenId === 'dashboardScreen' || screenId === 'loginScreen') {
+                backBtn.classList.add('hidden');
+            } else {
+                backBtn.classList.remove('hidden');
+            }
+        }
+
+        function goBack() {
+            navigateTo('dashboardScreen');
+        }
+
+        function goHome() {
+            navigateTo('dashboardScreen');
+        }
+
+        function closeRegistrationModal() {
+            document.getElementById('modalRegistrationSuccess').classList.add('hidden');
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appHeader').classList.remove('hidden');
+            navigateTo('dashboardScreen');
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('kisan_dost_profile');
+            state.userProfile = { mobile: '', district: 'Karimnagar', mandal: 'Huzurabad' };
+            document.getElementById('appHeader').classList.add('hidden');
+            navigateTo('loginScreen');
+        }
+
+        function switchCategoryTab(tab) {
+            state.activeTab = tab;
+            const tabMach = document.getElementById('tabMachineries');
+            const tabServ = document.getElementById('tabServices');
+            const secMach = document.getElementById('machineriesSection');
+            const secServ = document.getElementById('servicesSection');
+
+            if (tab === 'machineries') {
+                tabMach.className = "flex-1 py-2.5 rounded-xl bg-emerald-800 text-white shadow-md transition flex items-center justify-center space-x-2";
+                tabServ.className = "flex-1 py-2.5 rounded-xl text-slate-700 hover:text-slate-900 transition flex items-center justify-center space-x-2";
+                secMach.classList.remove('hidden');
+                secServ.classList.add('hidden');
+            } else {
+                tabServ.className = "flex-1 py-2.5 rounded-xl bg-emerald-800 text-white shadow-md transition flex items-center justify-center space-x-2";
+                tabMach.className = "flex-1 py-2.5 rounded-xl text-slate-700 hover:text-slate-900 transition flex items-center justify-center space-x-2";
+                secServ.classList.remove('hidden');
+                secMach.classList.add('hidden');
+            }
+        }
+
+        function renderMachineries() {
+            const grid = document.getElementById('machineryGrid');
+            grid.innerHTML = machineryDataset.map(m => `
+                <div onclick="selectMachineCategory('${m.name}')" class="bg-white rounded-2xl p-3 border border-slate-200 hover:border-emerald-500 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between group">
+                    <div>
+                        <div class="w-12 h-12 bg-emerald-50 text-emerald-800 rounded-xl flex items-center justify-center text-2xl mb-2 group-hover:scale-110 transition">
+                            ${m.icon}
+                        </div>
+                        <h4 class="font-bold text-xs text-slate-900 leading-tight mb-1">${m.name}</h4>
+                        <p class="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">${m.desc}</p>
+                    </div>
+                    <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                        <span class="font-extrabold text-emerald-800">₹${m.baseRate}<span class="text-[9px] font-normal text-slate-500">/hr</span></span>
+                        <span class="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">Ready</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderServices() {
+            const grid = document.getElementById('servicesGrid');
+            grid.innerHTML = servicesDataset.map(s => `
+                <div onclick="selectServiceCategory('${s.name}')" class="bg-white rounded-2xl p-3.5 border border-slate-200 hover:border-emerald-500 shadow-sm hover:shadow-md transition cursor-pointer flex items-center space-x-3 group">
+                    <div class="w-12 h-12 bg-amber-50 text-amber-800 rounded-xl flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition">
+                        ${s.icon}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-bold text-xs text-slate-900 leading-tight mb-0.5">${s.name}</h4>
+                        <p class="text-[10px] text-slate-500 truncate">${s.desc}</p>
+                        <span class="text-[10px] text-emerald-700 font-bold mt-1 inline-block">Starts ₹${s.baseRate}/visit</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-emerald-600 transition"></i>
+                </div>
+            `).join('');
+        }
+
+        function selectMachineCategory(catName) {
+            const machine = machineryDataset.find(m => m.name.toLowerCase() === catName.toLowerCase()) || machineryDataset[0];
+            state.selectedCategory = machine;
+            document.getElementById('selectedCategoryIcon').innerText = machine.icon;
+            document.getElementById('selectedCategoryTitle').innerText = machine.name;
+            renderProvidersList(machine.id, machine.baseRate);
+            navigateTo('listScreen');
+        }
+
+        function selectServiceCategory(servName) {
+            const service = servicesDataset.find(s => s.name.toLowerCase() === servName.toLowerCase()) || servicesDataset[0];
+            state.selectedCategory = service;
+            document.getElementById('selectedCategoryIcon').innerText = service.icon;
+            document.getElementById('selectedCategoryTitle').innerText = service.name;
+            renderProvidersList(service.id, service.baseRate);
+            navigateTo('listScreen');
+        }
+
+        function renderProvidersList(catId, baseRate) {
+            const matches = [
+                { id: 'p1', title: `${state.selectedCategory.name} - Commercial Heavy`, ownerName: 'Ramesh Reddy', phone: '9848012345', rating: 4.9, distanceKm: 1.2, hourlyRate: baseRate, badge: 'Verified Master' },
+                { id: 'p2', title: `Fast Dispatch ${state.selectedCategory.name}`, ownerName: 'Santhosh Kumar', phone: '9848098765', rating: 4.8, distanceKm: 2.1, hourlyRate: baseRate + 100, badge: 'High Performance' }
+            ];
+
+            document.getElementById('providersList').innerHTML = matches.map(p => `
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">${p.badge}</span>
+                            <h3 class="font-bold text-sm text-slate-900 mt-1">${p.title}</h3>
+                            <p class="text-xs text-slate-500">Owner: ${p.ownerName}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-black text-base text-emerald-800">₹${p.hourlyRate}</span>
+                            <span class="text-[10px] text-slate-500 block">/ hour</span>
+                        </div>
+                    </div>
+                    <button onclick="openBookingScreen('${p.id}', '${p.title}', '${p.ownerName}', '${p.phone}', ${p.hourlyRate})" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow transition">
+                        <span>Book Machine & Dispatch</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function openBookingScreen(id, title, ownerName, phone, rate) {
+            state.selectedProvider = { id, title, ownerName, phone, hourlyRate: rate };
+            document.getElementById('bookingItemImg').innerText = state.selectedCategory ? state.selectedCategory.icon : '🚜';
+            document.getElementById('bookingItemTitle').innerText = title;
+            document.getElementById('bookingOwnerName').innerText = `Owner: ${ownerName} (Verified)`;
+            document.getElementById('btnCallOwner').setAttribute('href', `tel:${phone}`);
+            calculateFare();
+            navigateTo('bookingScreen');
+        }
+
+        function calculateFare() {
+            if (!state.selectedProvider) return;
+            const hours = parseInt(document.getElementById('workDuration').value) || 2;
+            const total = hours * state.selectedProvider.hourlyRate;
+            document.getElementById('ratePerHour').innerText = `₹${state.selectedProvider.hourlyRate}`;
+            document.getElementById('hoursCount').innerText = `${hours} hrs`;
+            document.getElementById('subtotalPrice').innerText = `₹${total}`;
+            document.getElementById('totalFarePrice').innerText = `₹${total}`;
+        }
+
+        function simulateWhatsAppChat() {
+            const phone = state.selectedProvider ? state.selectedProvider.phone : '9876543210';
+            const text = encodeURIComponent(`Hello! I need to hire ${state.selectedProvider.title} in ${state.userProfile.mandal} mandal.`);
+            window.open(`https://wa.me/91${phone}?text=${text}`, '_blank');
+        }
+
+        function openHistoryModal() {
+            const container = document.getElementById('historyListContainer');
+            if (state.bookingsHistory.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">No active bookings found.</div>`;
+            } else {
+                container.innerHTML = state.bookingsHistory.map(b => `
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1">
+                        <div class="flex justify-between items-start">
+                            <span class="font-bold text-slate-900">${b.provider_name || b.providerName}</span>
+                            <span class="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded">${b.status}</span>
+                        </div>
+                        <p class="text-slate-500 text-[11px]">Owner: ${b.owner_name || b.ownerName} (${b.phone})</p>
+                        <div class="flex justify-between border-t border-slate-200/60 pt-1 text-slate-700 font-semibold">
+                            <span>Total: ${b.total} (${b.payment_type || b.paymentType})</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('modalHistory').classList.remove('hidden');
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('modalHistory').classList.add('hidden');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderMachineries();
+            renderServices();
+            loadProfile();
+        });
+    </script>
+</body>
+</html>
